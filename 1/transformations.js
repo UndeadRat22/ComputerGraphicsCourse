@@ -13,6 +13,13 @@ const transformations = {
   tr: [0, -0.25, -0.25, 0, 0.75, 0.25],
 };
 
+const colors = {
+  br: 'red',
+  bl: 'green',
+  tl: 'blue',
+  tr: 'brown',
+};
+
 /*
 -
 - -
@@ -20,8 +27,8 @@ const transformations = {
 const drawBaseShape = () => {
   context.beginPath();
   context.moveTo(0, 0);
-  context.lineTo(canvas.width * 0.5, 0);
-  context.lineTo(canvas.width * 0.5, canvas.height * 0.5);
+  context.lineTo(canvas.width * 0.3, 0);
+  context.lineTo(canvas.width * 0.3, canvas.height * 0.5);
   context.lineTo(canvas.width, canvas.height * 0.5);
   context.lineTo(canvas.width, canvas.height);
   context.lineTo(0, canvas.height);
@@ -45,6 +52,7 @@ const updateFrame = (transformation, lerp) => {
   clear();
   context.save();
   context.transform(...lerpedTransformation);
+  context.fillStyle = colors[selectedTransformation];
   drawBaseShape();
   context.restore();
 };
