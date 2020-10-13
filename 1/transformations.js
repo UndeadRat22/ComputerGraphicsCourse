@@ -7,10 +7,26 @@ let canvas, context;
 //context.transform(0, -0.25, -0.25, 0, canvas.width * 0.75, canvas.height * 0.25);
 
 const transformations = {
-  br: [0.5, 0, 0, 0.5, 0.5, 0.5],
-  bl: [0, 0.5, -0.5, 0, 0.5, 0.5],
-  tl: [0, 0.5, 0.5, 0, 0, 0],
-  tr: [0, -0.25, -0.25, 0, 0.75, 0.25],
+  br: {
+    rotation: 0,
+    scale: { x: 0.5, y: 0.5 },
+    offset: { x: 0.5, y: 0.5 },
+  },
+  bl: {
+    rotation: Math.PI * 0.5,
+    scale: { x: 0.5, y: 0.5 },
+    offset: { x: 0.5, y: 0.5 },
+  },
+  tl: {
+    rotation: Math.PI * 1.5,
+    scale: { x: -0.5, y: 0.5 },
+    offset: { x: 0, y: 0 },
+  },
+  tr: {
+    rotation: Math.PI * 0.5,
+    scale: { x: -0.25, y: 0.25 },
+    offset: { x: 0.75, y: 0.25 },
+  },
 };
 
 const colors = {
@@ -40,19 +56,20 @@ const clear = () => {
   context.clearRect(0, 0, canvas.width, canvas.height);
 };
 
-const updateFrame = (transformation, lerp) => {
-  const lerpedTransformation = [
-    (1 - lerp) * 1 + lerp * transformation[0],
-    (1 - lerp) * 0 + lerp * transformation[1],
-    (1 - lerp) * 0 + lerp * transformation[2],
-    (1 - lerp) * 1 + lerp * transformation[3],
-    (1 - lerp) * 0 + lerp * transformation[4] * canvas.width,
-    (1 - lerp) * 0 + lerp * transformation[5] * canvas.height,
-  ];
+const updateFrame = (selected, lerp) => {
   clear();
   context.save();
-  context.transform(...lerpedTransformation);
-  context.fillStyle = colors[selectedTransformation];
+  context.fillStyle = colors[selected];
+  const transformation = transformations[selected];
+  context.translate(
+    lerp * transformation.offset.x * canvas.width,
+    lerp * transformation.offset.y * canvas.height
+  );
+  context.rotate(lerp * transformation.rotation);
+  context.scale(
+    1 - lerp + lerp * transformation.scale.x,
+    1 - lerp + lerp * transformation.scale.y
+  );
   drawBaseShape();
   context.restore();
 };
@@ -67,7 +84,7 @@ const timeStep = (time) => {
   }
   const elapsed = time - startTime;
   lerp = Math.min(elapsed / animationDuration, 1); //clamp to 1
-  updateFrame(transformations[selectedTransformation], lerp);
+  updateFrame(selectedTransformation, lerp);
   window.requestAnimationFrame(timeStep);
 };
 
