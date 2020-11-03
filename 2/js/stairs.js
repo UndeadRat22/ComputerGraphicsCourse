@@ -3,7 +3,7 @@
 const guiSettings = {
   stairs: {
     stairHeight: { min: 1, max: 30 },
-    stairCount: { min: 1, max: 30 },
+    stairCount: { min: 2, max: 30 },
     angle: { min: -360, max: 360 },
   },
   step: {
@@ -26,14 +26,24 @@ const stairControls = {
   //step
   stepWidth: 4,
   stepDepth: 3,
+  stepDistance: 1,
   stepExtrudeDepth: 1,
   stepExtrudeBevelThickness: 0.2,
   stepExtrudeBevelSize: 0.2,
   stepExtrudeBevelSegments: 20,
   stepExtrudeCurveSegments: 20,
   stepExtrudeSteps: 5,
+  stepRelativeAngle: 0,
   //rail
+  updateControls: () => {
+    stairControls.stepRelativeAngle =
+      stairControls.angle / (stairObject.stairCount - 1);
+    stairControls.stepDistance =
+      (stairControls.stairHeight / stairControls.stairCount) * 0.5;
 
+    stairControls.updateStairs();
+    //draw
+  },
   updateStairs: () => {
     //drawScene();
   },
@@ -50,16 +60,54 @@ const stairControls = {
   },
 };
 
-const scene = new THREE.Scene();
-const renderer = new THREE.WebGLRenderer();
-const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+const stage = {
+  scene: new THREE.Scene(),
+  renderer: new THREE.WebGLRenderer(),
+  camera: new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+  ),
+  stairObject: new THREE.Object3D(),
+
+  init: () => {
+    stage.renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(stage.renderer.domElement);
+    stage.scene.position.x = 0;
+    stage.scene.position.y = 0;
+    stage.camera.position.x = -10;
+    stage.camera.position.y = 10;
+    stage.camera.position.z = 10;
+    stage.camera.lookAt(stage.scene.position);
+    stage.light();
+  },
+
+  light: () => {
+    var spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(-50, 50, -10);
+    spotLight.castShadow = true;
+    stage.scene.add(spotLight);
+    stage.scene.add(new THREE.AmbientLight('gray'));
+  },
+
+  start: () => {
+    const stepObject = new THREE.Object3D();
+    stepObject.add(stairBuilder.getStepMesh());
+    stepObject.position.x = 0;
+    stepObject.position.y = 0;
+    stage.stairObject.add(stepObject);
+    stage.scene.add(stage.stairObject);
+  },
+
+  render: () => {
+    stage.renderer.render(stage.scene, stage.camera);
+  },
+
+  update: () => {
+    stage.stairObject.rotation.y += 0.01;
+  },
+};
 
 //draw controls
 const gui = new dat.GUI();
@@ -74,61 +122,44 @@ const initGUIControls = () => {
           .min(value.min)
           .max(value.max)
           .step(value.step === undefined ? 1 : value.step)
-          .onFinishChange(stairControls.updateStairs);
+          .onFinishChange(stairControls.updateControls);
       }
     }
   }
 };
 initGUIControls();
 
-const getStepMesh = () => {
-  const extrudeSettings = stairControls.getStepExtrudeSettings();
-  const stepShape = new THREE.Shape();
+const stairBuilder = {
+  getStepMesh: () => {
+    const extrudeSettings = stairControls.getStepExtrudeSettings();
+    const stepShape = new THREE.Shape();
 
-  stepShape.moveTo(0, 0);
-  stepShape.lineTo(0, stairControls.stepDepth * 0.5);
-  stepShape.lineTo(stairControls.stepWidth, stairControls.stepDepth * 0.5);
-  stepShape.quadraticCurveTo(
-    stairControls.stepDepth * 0.25,
-    -stairControls.stepWidth * 0.25,
-    0,
-    0
-  );
+    stepShape.moveTo(0, 0);
+    stepShape.lineTo(0, stairControls.stepDepth * 0.5);
+    stepShape.lineTo(stairControls.stepWidth, stairControls.stepDepth * 0.5);
+    stepShape.quadraticCurveTo(
+      stairControls.stepDepth * 0.25,
+      -stairControls.stepWidth * 0.25,
+      0,
+      0
+    );
 
-  const stepGeometry = new THREE.ExtrudeGeometry(stepShape, extrudeSettings);
-  const stepMaterial = new THREE.MeshLambertMaterial({ color: 0x795c32 });
-  const stepMesh = new THREE.Mesh(stepGeometry, stepMaterial);
-  stepMesh.rotation.x = Math.PI * 0.5;
+    const stepGeometry = new THREE.ExtrudeGeometry(stepShape, extrudeSettings);
+    const stepMaterial = new THREE.MeshLambertMaterial({ color: 0x795c32 });
+    const stepMesh = new THREE.Mesh(stepGeometry, stepMaterial);
+    stepMesh.rotation.x = Math.PI * 0.5;
 
-  return stepMesh;
+    return stepMesh;
+  },
 };
-//draw stairs
-const stepObject = new THREE.Object3D();
-stepObject.add(getStepMesh());
-stepObject.position.x = 0;
-stepObject.position.y = 0;
 
-//camera
-scene.position.x = 0;
-scene.position.y = 0;
-scene.add(stepObject);
-camera.position.x = -10;
-camera.position.y = 10;
-camera.position.z = 10;
-camera.lookAt(scene.position);
-
-//lights
-var spotLight = new THREE.SpotLight(0xffffff);
-spotLight.position.set(-50, 50, -10);
-spotLight.castShadow = true;
-scene.add(spotLight);
-scene.add(new THREE.AmbientLight('gray'));
+stage.init();
+stage.start();
 
 //frame render
 const animate = () => {
   requestAnimationFrame(animate);
-  renderer.render(scene, camera);
-  //stepObject.position.x += 0.01;
-  stepObject.rotation.y += 0.01;
+  stage.render();
+  stage.update();
 };
 animate();
