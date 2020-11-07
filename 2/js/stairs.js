@@ -24,14 +24,14 @@ const controls = {
   stairHeight: 18,
   stairCount: 15,
   //step
-  extrudeAmount: 0,
   extrudeBevelThickness: 0.25,
   extrudeBevelSize: 0.5,
+  stepWidth: 8,
+  stepDepth: 3.5,
+  //step --fixed
   extrudeBevelSegments: 25,
   extrudeCurveSegments: 20,
   extrudeSteps: 4,
-  stepWidth: 8,
-  stepDepth: 3.5,
   //rail
   railRadius: 0.7,
   railHeight: 4,
