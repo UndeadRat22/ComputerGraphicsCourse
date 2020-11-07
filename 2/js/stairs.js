@@ -37,15 +37,14 @@ const stairControls = {
   //rail
   updateControls: () => {
     stairControls.stepRelativeAngle =
-      stairControls.angle / (stairObject.stairCount - 1);
+      stairControls.angle / (stairControls.stairCount - 1);
     stairControls.stepDistance =
       (stairControls.stairHeight / stairControls.stairCount) * 0.5;
 
     stairControls.updateStairs();
-    //draw
   },
   updateStairs: () => {
-    //drawScene();
+    stage.start();
   },
   getStepExtrudeSettings: () => {
     return {
@@ -69,7 +68,7 @@ const stage = {
     0.1,
     1000
   ),
-  stairObject: new THREE.Object3D(),
+  stairObject: null,
 
   init: () => {
     stage.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -92,6 +91,11 @@ const stage = {
   },
 
   start: () => {
+    if (stage.stairObject !== null) {
+      stage.scene.remove(stage.stairObject);
+      stage.stairObject = null;
+    }
+    stage.stairObject = new THREE.Object3D();
     const stepObject = new THREE.Object3D();
     stepObject.add(stairBuilder.getStepMesh());
     stepObject.position.x = 0;
