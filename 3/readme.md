@@ -2,7 +2,7 @@
 
 ## The Task
 
-Draw a cylinder using randomized points contained within the cylinder area.
+Draw a cylinder using randomized points contained within the cylinder volume.
 
 ## How to launch
 
