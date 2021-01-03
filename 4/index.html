@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Task 4</title>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <div id="container"></div>
+  </body>
+
+  <script src="libs/three.js"></script>
+  <script src="libs/three.min.js"></script>
+  <script src="libs/jquery-1.9.0.js"></script>
+  <script src="libs/dat.gui.js"></script>
+  <script src="libs/TrackballControls.js"></script>
+  <script src="libs/stats.js"></script>
+  <script src="libs/uclass_TeapotGeometry.js"></script>
+
+  <script type="x-shader/x-vertex" id="vertexShader">
+    precision mediump float;
+
+    uniform float uScale;
+    uniform float uEdge;
+    varying vec3 vPosition;
+    varying vec3 vNormal;
+    varying vec2 vUv;
+    uniform float dx, dy, dz;
+
+    void main(void)
+    {
+        vUv = uv;
+        vNormal = normalMatrix * normal;
+        vPosition = position;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  </script>
+  <script type="x-shader/x-vertex" id="fragmentShader">
+    precision mediump float;
+
+    varying vec3 vPosition;
+    varying vec3 vNormal;
+    varying vec2 vUv;
+    uniform float dx, dy, dz, uEdge, uScale;
+    #extension GL_OES_standard_derivatives : enable
+
+    void main() {
+
+        vec3 lightDir = normalize(vec3(dx,dy,dz));
+        vec3 color = vec3(dot(lightDir,normalize(vNormal)));
+
+        vec3 blue = vec3(0.0,0.0,0.9);
+        vec3 red = vec3(0.9,0.0,0.0);
+        vec3 cyan = vec3(0.0,0.9,0.9);
+        vec3 yellow = vec3(0.9,0.9,0.0);
+
+        if (vPosition.y > -1.3 && vPosition.y < 4.2 && vPosition.x < 20.0 && vPosition.x > -20.0)
+        {
+            float u = abs(fract(vUv.x * uScale)-0.5);
+            float v = abs(fract(vUv.y * uScale * 0.5)-0.5);
+
+            // a-la rotation
+            float f = u + v - 0.5;
+            float grad = length(vec2(dFdx(f), dFdy(f)));
+            float d = uEdge*grad;
+            float edgeFactor = smoothstep(-d, d, f);
+
+            vec3 finalColor = mix(yellow, red, edgeFactor);
+
+            //cyan
+            f = max(u, v) - 0.25;
+            grad = length(vec2(dFdx(f) ,dFdy(f)));
+            d = uEdge*grad;
+            edgeFactor = smoothstep(-d, d, f);
+            finalColor = mix(cyan, finalColor, edgeFactor);
+
+            //blue
+            u = abs(fract(u) - 0.5);
+            v = abs(fract(v) - 0.5);
+            f = max(u, v) - 0.25;
+            grad = length(vec2(dFdx(f), dFdy(f)));
+            d = uEdge*grad;
+            edgeFactor = smoothstep(-d, d, f);
+            finalColor = mix(blue, finalColor, edgeFactor);
+            gl_FragColor = vec4(finalColor*color, 1.0);
+        }
+        else gl_FragColor = vec4(color,1.0);
+    }
+  </script>
+
+  <script type="text/javascript" src="index.js"></script>
+</html>
